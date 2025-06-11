@@ -33,7 +33,13 @@ print("Model loaded.")
 # --- Gemini API Helper ---
 async def call_gemini_api(prompt: str, is_json_response: bool = False) -> dict:
     """A generic helper to call the Gemini API."""
-    api_key = "" # Handled by environment
+    # API key is expected to be set in the environment variable GOOGLE_API_KEY
+    api_key = os.getenv("GOOGLE_API_KEY", "")
+    if not api_key:
+        print("Warning: GOOGLE_API_KEY environment variable not set. Gemini API calls will fail.")
+        # Depending on desired strictness, could raise ValueError here
+        # raise ValueError("GOOGLE_API_KEY environment variable not set.")
+
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     
     payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
@@ -191,5 +197,67 @@ async def ask_gemini_with_context(query: str, context_chunks: List[TextEmbedding
     return await call_gemini_api(prompt)
 
 def highlight_text_in_pdf(source_id: str, text_to_highlight: str, page_number: int) -> str:
-    # This function's logic is unchanged
-    pass
+    """
+    Highlights the given text in a PDF file and saves the highlighted PDF.
+
+    Args:
+        source_id: The filename of the source PDF.
+        text_to_highlight: The text to search for and highlight.
+        page_number: The 1-indexed page number where the text is located.
+
+    Returns:
+        The path to the saved highlighted PDF.
+    """
+    original_pdf_path = os.path.join(CACHE_DIR, source_id)
+
+    # Ensure the output directory exists
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    output_filename = f"{os.path.splitext(source_id)[0]}_highlighted.pdf"
+    highlighted_pdf_path = os.path.join(OUTPUT_DIR, output_filename)
+
+    try:
+        doc = fitz.open(original_pdf_path)
+    except Exception as e:
+        print(f"Error opening PDF {original_pdf_path}: {e}")
+        # Consider re-raising or returning an error indicator
+        raise  # Or return an appropriate error response
+
+    # Adjust page_number for 0-indexing used by PyMuPDF
+    page_idx = page_number - 1
+
+    if page_idx < 0 or page_idx >= doc.page_count:
+        print(f"Error: Page number {page_number} (0-indexed {page_idx}) is out of range for PDF {source_id} which has {doc.page_count} pages.")
+        doc.close()
+        # It's important to handle this case, perhaps by raising an error or returning a specific value
+        raise ValueError(f"Page number {page_number} is out of range.")
+
+
+    page = doc.load_page(page_idx)
+
+    # Search for the text on the page
+    text_instances = page.search_for(text_to_highlight)
+
+    if not text_instances:
+        print(f"Text '{text_to_highlight}' not found on page {page_number} of {source_id}.")
+        # Decide if this is an error or just a case where no highlighting is done
+        # For now, we'll save the document as is, but one might choose to raise an error
+    else:
+        for inst in text_instances:
+            highlight = page.add_highlight_annot(inst)
+            if highlight is None:
+                print(f"Warning: Could not add highlight annotation for instance {inst} on page {page_number} of {source_id}.")
+
+
+    try:
+        # Save the document, overwriting if it already exists
+        doc.save(highlighted_pdf_path, overwrite=True)
+        print(f"Successfully saved highlighted PDF to: {highlighted_pdf_path}")
+    except Exception as e:
+        print(f"Error saving highlighted PDF {highlighted_pdf_path}: {e}")
+        doc.close() # Ensure the document is closed on error
+        raise # Or return an appropriate error response
+    finally:
+        doc.close() # Always close the document
+
+    return highlighted_pdf_path

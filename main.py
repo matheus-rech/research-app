@@ -9,6 +9,8 @@ import uvicorn
 # Import our custom processing logic
 from processing import run_extraction_pipeline, query_and_synthesize
 
+# Note: This application requires the GOOGLE_API_KEY environment variable to be set for full functionality.
+
 # --- FastAPI App Initialization ---
 app = FastAPI(
     title="AI Research Assistant API",
