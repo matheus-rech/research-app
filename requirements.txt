@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-multipart
+langchain-text-splitters
+sentence-transformers
+lancedb
+pydantic
+httpx
+PyMuPDF
