@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pydantic
+PyMuPDF
+sentence-transformers
+lancedb
+httpx
+langchain
