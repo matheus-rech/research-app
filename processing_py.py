@@ -36,9 +36,7 @@ async def call_gemini_api(prompt: str, is_json_response: bool = False) -> dict:
     # API key is expected to be set in the environment variable GOOGLE_API_KEY
     api_key = os.getenv("GOOGLE_API_KEY", "")
     if not api_key:
-        print("Warning: GOOGLE_API_KEY environment variable not set. Gemini API calls will fail.")
-        # Depending on desired strictness, could raise ValueError here
-        # raise ValueError("GOOGLE_API_KEY environment variable not set.")
+        raise ValueError("GOOGLE_API_KEY environment variable not set. Gemini API calls will fail.")
 
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     
