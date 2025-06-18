@@ -271,7 +271,7 @@ def highlight_text_in_pdf(source_id: str, text_to_highlight: str, page_number: i
         print(f"Successfully saved highlighted PDF to: {highlighted_pdf_path}")
     except Exception as e:
         print(f"Error saving highlighted PDF {highlighted_pdf_path}: {e}")
-        doc.close() # Ensure the document is closed on error
+        # doc.close() # Redundant: This is already handled by the 'finally' block on line 261
         raise # Or return an appropriate error response
     finally:
         doc.close() # Always close the document
