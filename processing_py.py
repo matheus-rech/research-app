@@ -192,6 +192,24 @@ async def ask_gemini_with_context(query: str, context_chunks: List[TextEmbedding
     
     ANSWER:
     """
+import logging
+
+# Set up module-level logger
+logger = logging.getLogger(__name__)
+
+# --- Gemini API Helper ---
+async def call_gemini_api(prompt: str, is_json_response: bool = False) -> dict:
+    """A generic helper to call the Gemini API."""
+    # API key is expected to be set in the environment variable GOOGLE_API_KEY
+    api_key = os.getenv("GOOGLE_API_KEY", "")
+    if not api_key:
+        logger.warning("GOOGLE_API_KEY environment variable not set. Gemini API calls will fail.")
+        # Depending on desired strictness, could raise ValueError here
+        # raise ValueError("GOOGLE_API_KEY environment variable not set.")
+
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+
+    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
     return await call_gemini_api(prompt)
 
 def highlight_text_in_pdf(source_id: str, text_to_highlight: str, page_number: int) -> str:
